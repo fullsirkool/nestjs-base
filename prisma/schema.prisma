@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String            @id @unique @default(uuid())
+  email            String            @unique
+  password         String?
+  fullName         String            @map("full_name")
+  nickname         String?
+  description      String?
+  country          String?
+  gender           Gender?
+  address          String?
+  avatarUrl        String?           @map("avatar_url")
+  isPrivate        Boolean           @default(false) @map("is_private")
+  activated        Boolean           @default(false)
+  userRole         UserRole          @default(USER)
+  userVerification UserVerification?
+  userToken        UserToken?
+
+  @@map("user")
+}
+
+model UserToken {
+  id           String   @id @unique @default(uuid())
+  userId       String   @unique @map("user_id")
+  refreshToken String   @map("refresh_token")
+  expiredDate  DateTime @map("expired_date")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_token")
+}
+
+model UserVerification {
+  id          String       @id @unique @default(uuid())
+  userId      String       @unique @map("user_id")
+  verifyCode  String       @unique @map("verify_code")
+  expiredDate DateTime     @map("expired_date")
+  type        UserCodeType
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+  @@map("user_verification ")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum UserCodeType {
+  VERIFICATION
+  PASSWORD_RESET
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
